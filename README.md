@@ -69,7 +69,7 @@ Elle propose un mini-player persistant, une gestion complète de la lecture (pro
 
 📸 Aperçu
 
-![HomeView]([URL_de_ton_image](https://github.com/Vibes33/Retro-Music-App/blob/main/IMG_1437.PNG))
+![HomeView](https://github.com/Vibes33/Retro-Music-App/blob/main/IMG_1437.PNG)
 
 ⸻
 
