@@ -10,7 +10,6 @@ import UniformTypeIdentifiers
 import PhotosUI
 
 struct MusicView: View {
-    // Sort options (for the popup button)
     enum SortOption: String, CaseIterable, Identifiable {
         case date = "Date d'ajout"
         case artist = "Artiste"
@@ -34,16 +33,13 @@ struct MusicView: View {
     @EnvironmentObject var player: PlayerManager
     @Query(sort: [SortDescriptor(\Track.dateAdded, order: .reverse)]) var allTracks: [Track]
 
-    // File importer
     @State private var showImporter = false
     @State private var importError: String?
 
-    // Edit/Delete state
     @State private var selectedTrack: Track?
     @State private var showEditSheet: Bool = false
     @State private var showDeleteConfirm: Bool = false
 
-    // Debug / Diagnostics
     @State private var debugLastImportTitle: String? = nil
     @State private var debugMessage: String? = nil
     // Import progress
@@ -52,17 +48,14 @@ struct MusicView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Background
             Color(.systemGray6)
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
-                // Top control bar
                 topControls
                     .padding(.top, 12)
                     .padding(.horizontal, 16)
 
-                // Quick checks / diagnostics
                 VStack(alignment: .leading, spacing: 4) {
                     if !searchText.isEmpty {
                         Text("Filtre actif: \(searchText)")
@@ -134,24 +127,20 @@ struct MusicView: View {
                 guard let url = urls.first else { return }
                 isImporting = true
 
-                // Gain sandbox access for Files/iCloud locations
                 let needsStop = url.startAccessingSecurityScopedResource()
                 defer { if needsStop { url.stopAccessingSecurityScopedResource() } }
 
-                // If the file is in iCloud and not local yet, trigger a download
                 let reachable = (try? url.checkResourceIsReachable()) ?? false
                 if !reachable {
                     try? FileManager.default.startDownloadingUbiquitousItem(at: url)
                 }
 
-                // Coordinate the read to avoid permission issues
                 let coordinator = NSFileCoordinator()
                 var coordError: NSError?
                 var localTempURL: URL?
 
                 coordinator.coordinate(readingItemAt: url, options: .forUploading, error: &coordError) { readableURL in
                     do {
-                        // Crée une copie locale stable du snapshot (certains providers retirent le snapshot après ce bloc)
                         let ext = readableURL.pathExtension.isEmpty ? url.pathExtension : readableURL.pathExtension
                         let tmpURL = FileManager.default.temporaryDirectory
                             .appendingPathComponent(UUID().uuidString)
@@ -159,7 +148,6 @@ struct MusicView: View {
                         do {
                             try FileManager.default.copyItem(at: readableURL, to: tmpURL)
                         } catch {
-                            // Fallback: stream copy si le provider bloque copyItem
                             let data = try Data(contentsOf: readableURL, options: [.mappedIfSafe])
                             try data.write(to: tmpURL, options: [.atomic])
                         }
@@ -173,7 +161,6 @@ struct MusicView: View {
 
                 // Importer depuis le fichier local persistant
                 if let tmp = localTempURL {
-                    // Le modelContext préfère le MainActor
                     DispatchQueue.main.async {
                         do {
                             let derivedTitle = url.deletingPathExtension().lastPathComponent
@@ -185,8 +172,7 @@ struct MusicView: View {
                                                              context: modelContext,
                                                              artworkURL: nil)
                             debugLastImportTitle = derivedTitle
-                            debugMessage = nil // no success log in diagnostics; keep only the top toast
-                            // Clear search so the new track is visible even if a filter was active
+                            debugMessage = nil
                             isSearching = false
                             searchText = ""
                             isImporting = false
@@ -307,11 +293,9 @@ struct MusicView: View {
         .navigationTitle("")
     }
 
-    // MARK: - Top Controls (iOS 26 "liquid glass" style)
     private var topControls: some View {
         ZStack {
             if isSearching {
-                // Search mode: animated bar with cancel on the left
                 HStack(spacing: 12) {
                     GlassCircleButton(systemName: "chevron.left") {
                         withAnimation(.snappy) {
@@ -350,7 +334,6 @@ struct MusicView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
                 .onAppear { DispatchQueue.main.async { self.searchFocused = true } }
             } else {
-                // Default controls
                 HStack {
                     HStack(spacing: 12) {
                         GlassCircleButton(systemName: "magnifyingglass") {
@@ -382,7 +365,6 @@ struct MusicView: View {
 }
 
 extension MusicView {
-    // Filter + sort in-memory for now (simple & responsive)
     var filteredTracks: [Track] {
         let needle = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         var items = allTracks
@@ -403,8 +385,6 @@ extension MusicView {
         }
     }
 }
-
-// MARK: - Components (Liquid Glass styles)
 struct TrackRow: View {
     let track: Track
     var onMore: (() -> Void)? = nil
@@ -427,8 +407,6 @@ struct TrackRow: View {
             }
 
             Spacer()
-
-            // Trash (delete) button
             Button(action: { onDelete?() }) {
                 Image(systemName: "trash")
                     .font(.system(size: 16, weight: .semibold))
@@ -577,7 +555,6 @@ struct EditTrackSheet: View {
     }
 }
 
-/// Write image data to a temporary file and return its URL (JPEG)
 private func writeTempImageAndReturnURL(data: Data) throws -> URL {
     let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("jpg")
     try data.write(to: url)
@@ -601,7 +578,7 @@ struct GlassCircleButton: View {
                 .shadow(color: Color.black.opacity(0.1), radius: 10, y: 4)
         }
         .buttonStyle(.plain)
-        .contentShape(Circle()) // clickable area
+        .contentShape(Circle())
     }
 }
 
@@ -647,7 +624,7 @@ struct MiniPlayerBar: View {
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                         }
-                        // Progress bar with seek-on-tap (via DragGesture)
+                        // Progress bar
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 Capsule().fill(Color.secondary.opacity(0.25))

@@ -4,13 +4,13 @@
 //
 //  Created by Ryan on 20/09/2025.
 //
+
 import SwiftUI
 import Observation
 
 struct HomeView: View {
     @Environment(LibraryStore.self) private var library
-
-    // MARK: Layout Config (edit values here)
+    
     private let cardWidth: CGFloat = 165
     private let cardHeight: CGFloat = 113
     private let bigWidth: CGFloat = 346
@@ -18,7 +18,6 @@ struct HomeView: View {
     private let heroHeight: CGFloat = 320
     private let cardCornerRadius: CGFloat = 15
 
-    // Offsets (positions)
     private let heroOffsetX: CGFloat = 0
     private let heroOffsetY: CGFloat = 0
 
@@ -44,7 +43,7 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // HERO section that scrolls with content (full-bleed + parallax)
+          
                 ZStack {
                     GeometryReader { proxy in
                         let minY = proxy.frame(in: .global).minY
@@ -57,7 +56,7 @@ struct HomeView: View {
                     }
                     .frame(height: heroHeight)
 
-                    // Overlay title + button anchored at the bottom of the hero
+                    
                     VStack(spacing: 12) {
                         Text("Retro")
                             .font(.system(size: 50, weight: .bold))
@@ -98,7 +97,6 @@ struct HomeView: View {
         .background(Color(.systemBackground))
     }
 
-    // MARK: Playlists section
     private var playlistsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
@@ -143,7 +141,6 @@ struct HomeView: View {
         .offset(x: 35, y: 0)
     }
 
-    // MARK: Nouveautés
     private var nouveautesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Nouveautés")
@@ -179,7 +176,6 @@ struct HomeView: View {
         .offset(x: 35, y: 0)
     }
 
-    // MARK: Big promo image
     private var bigPromo: some View {
         AppImage("imagep3")
             .frame(width: bigCardSize.width, height: bigCardSize.height)
@@ -195,7 +191,6 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Playlist Card
 struct PlaylistCard: View {
     let playlist: Playlist
 
@@ -231,7 +226,6 @@ struct SettingsView: View { var body: some View { Text("Settings").frame(maxWidt
 struct AccountView: View { var body: some View { Text("Account").frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(.systemBackground)) } }
 
 
-// MARK: - Models & Store
 struct Playlist: Identifiable, Hashable {
     let id = UUID()
     var title: String
@@ -245,7 +239,6 @@ struct Playlist: Identifiable, Hashable {
     ]
 }
 
-// MARK: - Image helper
 struct AppImage: View {
     private let name: String
     init(_ name: String) { self.name = name }
@@ -272,7 +265,6 @@ struct AppImage: View {
     }
 }
 
-// MARK: - Utilities
 extension Font {
     static func system(_ style: TextStyle, design: Font.Design = .default, weight: Font.Weight) -> Font {
         .system(style, design: design).weight(weight)

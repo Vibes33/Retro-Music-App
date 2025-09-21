@@ -8,8 +8,7 @@
 import Foundation
 import SwiftData
 
-// MARK: - Tag Model
-/// User-defined tag (Many-to-Many with Track)
+
 @Model
 final class Tag {
     @Attribute(.unique) var name: String
@@ -20,33 +19,23 @@ final class Tag {
     }
 }
 
-// MARK: - Track Model
 @Model
 final class Track {
-    /// Identifiant stable
+    
     @Attribute(.unique) var id: UUID
 
-    /// Nom du son (obligatoire)
     var title: String
-    /// "Unknown" si non renseigné
     var artist: String
-    /// "Unknown" si non renseigné
     var album: String
 
-    /// Date d'ajout auto
     var dateAdded: Date
-    /// 1, 2, 3… selon l'ordre d'import
     var downloadIndex: Int
 
-    /// Nom de fichier audio relatif dans Documents/Audio (ex: "<uuid>.mp3")
     var filePath: String
-    /// Nom de fichier artwork relatif dans Documents/Artwork (optionnel)
     var artworkPath: String?
 
-    /// Durée en secondes
     var duration: Double
 
-    /// Relation N-N avec Tag
     var tags: [Tag] = []
 
     init(id: UUID = UUID(),
@@ -72,7 +61,6 @@ final class Track {
     }
 }
 
-// MARK: - Convenience
 extension Track {
     var formattedDuration: String {
         guard duration.isFinite, duration > 0 else { return "--:--" }
@@ -83,7 +71,6 @@ extension Track {
     }
 }
 
-// MARK: - Sample Data (for previews)
 #if DEBUG
 extension Track {
     static func sample(title: String = "Demo Song", artist: String = "Unknown", album: String = "Unknown") -> Track {

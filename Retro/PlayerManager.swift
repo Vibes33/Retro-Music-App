@@ -17,7 +17,6 @@ final class PlayerManager: NSObject, ObservableObject {
     @Published var currentTime: TimeInterval = 0
     @Published var duration: TimeInterval = 0
 
-    // Repeat & convenience flags/labels for UI
     @Published var isRepeatOne = false
 
     var canPlayNext: Bool {
@@ -109,7 +108,6 @@ final class PlayerManager: NSObject, ObservableObject {
             currentIndex = next
             playCurrent()
         } else {
-            // reached end: stop but keep last in Now Playing
             stop()
         }
     }
@@ -121,7 +119,6 @@ final class PlayerManager: NSObject, ObservableObject {
             currentIndex = prev
             playCurrent()
         } else {
-            // at start: restart current track
             seek(toTime: 0)
         }
     }
@@ -209,7 +206,6 @@ final class PlayerManager: NSObject, ObservableObject {
             self?.togglePlayPause(); return .success
         }
 
-        // Enable scrubbing from Lock Screen / Dynamic Island
         center.changePlaybackPositionCommand.isEnabled = true
         center.changePlaybackPositionCommand.addTarget { [weak self] event in
             guard let self = self, let e = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }

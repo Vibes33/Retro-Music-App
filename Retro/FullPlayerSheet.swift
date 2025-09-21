@@ -21,7 +21,6 @@ struct FullPlayerSheet: View {
 
             VStack(spacing: 20) {
 
-                // Top bar
                 HStack {
                     GlassCircleButton(systemName: "xmark") { dismiss() }
                     Spacer()
@@ -56,7 +55,6 @@ struct FullPlayerSheet: View {
                     .padding(.horizontal, 24)
                 }
 
-                // Time labels + progress
                 VStack(spacing: 8) {
                     HStack {
                         Text(player.elapsedString).font(.caption).foregroundStyle(.secondary)
@@ -65,7 +63,6 @@ struct FullPlayerSheet: View {
                     }
                     .padding(.horizontal, 24)
 
-                    // Slider progress (scrub)
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color.secondary.opacity(0.25))
@@ -92,7 +89,6 @@ struct FullPlayerSheet: View {
                     .padding(.horizontal, 24)
                 }
 
-                // Controls
                 HStack(spacing: 24) {
                     GlassCircleButton(systemName: "backward.fill") {
                         player.playPrevious()
@@ -114,7 +110,6 @@ struct FullPlayerSheet: View {
 
                 Spacer()
 
-                // Repeat one toggle (bottom-right)
                 HStack {
                     Spacer()
                     GlassCircleButton(systemName: player.isRepeatOne ? "repeat.1.circle.fill" : "repeat.1.circle") {

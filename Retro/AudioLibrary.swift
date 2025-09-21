@@ -51,8 +51,7 @@ enum AudioLibrary {
     static var allowedFileExtensions: Set<String> { ["mp3", "m4a", "aac", "wav"] }
     static var allowedUTTypes: [UTType] { [.audio] }
 
-    /// Produce a local, readable snapshot URL for a given (possibly iCloud/Drive) URL using NSFileCoordinator.
-    /// This works even when the original file is not yet fully downloaded locally.
+    
     static func snapshotForReading(_ url: URL) throws -> URL {
         var coordError: NSError?
         var result: URL?
@@ -65,13 +64,9 @@ enum AudioLibrary {
     }
 
     // MARK: iCloud/Security helpers
-    /// Ensure the URL is locally reachable (trigger iCloud download if needed) and return a URL safe to read.
-    /// Caller is expected to have started security-scoped access if the URL requires it.
     static func makeLocalIfNeeded(_ url: URL) throws -> URL {
-        // If already reachable, use as-is
         if (try? url.checkResourceIsReachable()) == true { return url }
 
-        // If it's an iCloud ubiquitous item, attempt download and poll its status a bit longer
         let keys: Set<URLResourceKey> = [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey]
         let values = try? url.resourceValues(forKeys: keys)
         if values?.isUbiquitousItem == true {
@@ -90,7 +85,6 @@ enum AudioLibrary {
         throw AudioImportError.fileMissing
     }
 
-    /// Fallback copy when FileManager.copyItem fails (some providers block direct copy). Streams data to destination.
     static func streamCopy(from src: URL, to dst: URL) throws {
         guard let input = InputStream(url: src), let output = OutputStream(url: dst, append: false) else {
             throw AudioImportError.copyFailed
@@ -112,7 +106,6 @@ enum AudioLibrary {
         }
     }
 
-    // MARK: Import
     /// Copie un fichier audio dans le sandbox, calcule la durée, crée/associe les tags et insère un `Track` SwiftData.
     @MainActor
     @discardableResult
@@ -123,7 +116,6 @@ enum AudioLibrary {
                                    tagNames: [String],
                                    context: ModelContext,
                                    artworkURL: URL? = nil) throws -> Track {
-        // Resolve to a readable local URL (fast‑path for already‑local files)
         let resolvedURL: URL
         if sourceURL.isFileURL {
             resolvedURL = sourceURL
@@ -131,19 +123,15 @@ enum AudioLibrary {
             let snapURL = try snapshotForReading(sourceURL)
             resolvedURL = try makeLocalIfNeeded(snapURL)
         }
-        // Validate extension after resolving (fallback to source if empty)
         var ext = resolvedURL.pathExtension.lowercased()
         if ext.isEmpty { ext = sourceURL.pathExtension.lowercased() }
         guard allowedFileExtensions.contains(ext) else { throw AudioImportError.unsupportedType }
 
-        // Ensure dirs
         let audioDir = try ensureSubdir(audioDirName)
 
-        // Destination unique
         let id = UUID()
         let destURL = audioDir.appendingPathComponent("\(id).\(ext)")
 
-        // Copy file in sandbox (try direct copy, then fallback to stream copy)
         do {
             try FileManager.default.copyItem(at: resolvedURL, to: destURL)
         } catch {
@@ -154,25 +142,20 @@ enum AudioLibrary {
             }
         }
 
-        // Duration via AVFoundation
         let asset = AVURLAsset(url: destURL, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
         let seconds = CMTimeGetSeconds(asset.duration)
         let durationSec: Double = seconds.isFinite && !seconds.isNaN && seconds >= 0 ? seconds : 0
 
-        // Download index (count + 1)
         let count = (try? context.fetch(FetchDescriptor<Track>()).count) ?? 0
 
-        // Tags
         var tags: [Tag] = []
         for name in tagNames {
             if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { continue }
             if let tag = try? fetchOrCreateTag(named: name, in: context) { tags.append(tag) }
         }
 
-        // Artwork copy (optional)
         let artworkPath = try saveArtworkIfNeeded(artworkURL)
 
-        // Create Track
         let track = Track(
             id: id,
             title: title,
@@ -189,7 +172,6 @@ enum AudioLibrary {
         return track
     }
 
-    // MARK: Update
     /// Met à jour les métadonnées d'un track (titre, artiste, album, tags, artwork)
     @MainActor
     static func update(track: Track,
@@ -204,7 +186,6 @@ enum AudioLibrary {
         if let album = album { track.album = album.isEmpty ? "Unknown" : album }
 
         if let names = tagNames {
-            // Re-map tags entirely from provided names
             var newTags: [Tag] = []
             for name in names where !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 if let tag = try? fetchOrCreateTag(named: name, in: context) { newTags.append(tag) }
@@ -213,7 +194,6 @@ enum AudioLibrary {
         }
 
         if let art = newArtworkURL {
-            // Delete old artwork file if exists
             if let old = track.artworkPath {
                 try? deleteArtwork(filename: old)
             }
@@ -235,19 +215,17 @@ enum AudioLibrary {
             try? deleteArtwork(filename: art)
         }
 
-        // 2) Remove from DB
         context.delete(track)
 
-        // 3) Reindex remaining tracks to keep a stable ordering
+       
         try reindexDownloadIndices(context: context)
 
-        // 4) Persist
+        
         try context.save()
     }
 
     @MainActor
     private static func reindexDownloadIndices(context: ModelContext) throws {
-        // Fetch all tracks ordered by downloadIndex then title for stable ordering
         var descriptor = FetchDescriptor<Track>()
         descriptor.sortBy = [
             SortDescriptor(\.downloadIndex, order: .forward),
@@ -260,7 +238,6 @@ enum AudioLibrary {
         }
     }
 
-    // MARK: File ops
     @discardableResult
     static func saveArtworkIfNeeded(_ url: URL?) throws -> String? {
         guard let src = url else { return nil }
@@ -293,7 +270,6 @@ enum AudioLibrary {
         }
     }
 
-    // MARK: Tag helper
     @MainActor
     static func fetchOrCreateTag(named name: String, in context: ModelContext) throws -> Tag {
         if let existing = try context.fetch(FetchDescriptor<Tag>(predicate: #Predicate { $0.name == name })).first {
