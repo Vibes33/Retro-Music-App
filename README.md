@@ -10,8 +10,11 @@ Elle propose un mini-player persistant, une gestion complète de la lecture (pro
 🚀 Fonctionnalités actuelles
 
 ✅ Import de fichiers audio dans une base locale (CoreData/SwiftData).
+
 ✅ Affichage des morceaux sous forme de rectangles cliquables.
+
 ✅ Suppression sécurisée avec alerte de confirmation.
+
 ✅ Mini-player :
 	•	Progress bar en temps réel.
 	•	Boutons Play/Pause, Next, Previous.
